@@ -286,6 +286,7 @@ const App: React.FC = () => {
             { id: 'home', label: 'Dashboard', icon: <LayoutDashboard size={20} /> },
             { id: 'debts', label: 'Dívidas', icon: <List size={20} /> },
             { id: 'month', label: 'Mês Atual', icon: <Calendar size={20} /> },
+            { id: 'income', label: 'Ajuste de Renda', icon: <TrendingUp size={20} /> },
             { id: 'advisor', label: 'Consultoria', icon: <BrainCircuit size={20} /> },
             { id: 'settings', label: 'Ajustes', icon: <Settings size={20} /> }
           ].map(tab => (
@@ -417,6 +418,38 @@ const App: React.FC = () => {
                         </div>
                     </Card>
                 </div>
+            </div>
+        )}
+
+        {activeTab === 'income' && (
+            <div className="space-y-12">
+                <h2 className="text-4xl font-black">Ajuste de Renda</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <Card title="Adicionar Renda Extra" icon={<Plus size={24}/>} className="bg-white">
+                        <p className="text-gray-500 mb-6">Inclua rendimentos adicionais como freelas, bônus, etc.</p>
+                        <button onClick={() => setShowExtraIncomeModal(true)} className="w-full bg-black text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-3 hover:scale-105 transition-all shadow-lg"><Plus size={20} /> Adicionar Renda Extra</button>
+                    </Card>
+                    <Card title="Ajustar Salário" icon={<Edit3 size={24}/>} className="bg-white">
+                        <p className="text-gray-500 mb-6">Atualize seu salário principal quando houver mudanças.</p>
+                        <input type="number" value={currentUser.income} onChange={e => setCurrentUser({...currentUser, income: parseFloat(e.target.value) || 0})} className="w-full bg-gray-50 rounded-xl p-4 font-bold mb-4" placeholder="Novo Salário" />
+                        <button onClick={() => { setData({...data, incomes: data.incomes.map(inc => inc.id === 'inc_1' ? {...inc, amount: currentUser.income} : inc)}); }} className="w-full bg-black text-white py-4 rounded-2xl font-bold">Atualizar Salário</button>
+                    </Card>
+                    <Card title="Simulação de Imprevisto" icon={<AlertTriangle size={24}/>} className="bg-white">
+                        <p className="text-gray-500 mb-6">Simule situações de crise e veja como o app recalcula prioridades.</p>
+                        <button onClick={() => setShowCrisisModal(true)} className="w-full bg-black text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-3 hover:scale-105 transition-all shadow-lg"><AlertTriangle size={20} /> Simular Crise</button>
+                    </Card>
+                </div>
+                <Card title="Priorização de Dívidas" icon={<BarChart3 size={24}/>} className="bg-white">
+                    <p className="text-gray-500 mb-6">Dívidas são priorizadas automaticamente: necessidades básicas da família têm prioridade máxima.</p>
+                    <div className="space-y-4">
+                        {[...data.debts].filter(d => d.status === 'EM ANDAMENTO').sort((a, b) => b.priorityScore - a.priorityScore).map(debt => (
+                            <div key={debt.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                                <div><p className="font-bold">{debt.name}</p><p className="text-sm text-gray-500">Prioridade: {debt.isAgreement ? 'Acordo/Negociação' : 'Padrão'}</p></div>
+                                <div className="text-right"><p className="font-bold">R$ {debt.monthlyInstallment.toLocaleString('pt-BR')}</p><p className="text-sm text-gray-500">Score: {debt.priorityScore}</p></div>
+                            </div>
+                        ))}
+                    </div>
+                </Card>
             </div>
         )}
 
