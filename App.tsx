@@ -274,7 +274,7 @@ const App: React.FC = () => {
     <div className="min-h-screen flex flex-col md:flex-row font-sans text-slate-800">
       <nav className="w-full md:w-[280px] bg-white flex flex-col md:fixed h-full z-20 border-r border-gray-100">
         <div className="p-10 flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-primary rounded-xl flex items-center justify-center text-white shadow-lg"><Zap size={20} fill="currentColor" /></div>
+          <img src="/logo.png" alt="FinanFlow Logo" className="w-10 h-10 rounded-xl shadow-lg" />
           <h1 className="text-2xl font-black tracking-tight">FinanFlow</h1>
         </div>
         <div className="px-10 mb-8 flex items-center gap-3">
