@@ -21,8 +21,9 @@ import { fetchSheetData, saveSheetData } from './sheetsService';
 
 // Added missing interfaces for component state
 interface OnboardingState {
-  step: 'LOGIN' | 'PERSONAL_INFO' | 'FAMILY_CHECK' | 'FAMILY_FORM' | 'COMPLETED';
+  step: 'LOGIN' | 'EMAIL_LOGIN' | 'PERSONAL_INFO' | 'FAMILY_CHECK' | 'FAMILY_FORM' | 'COMPLETED';
   tempName: string;
+  tempEmail: string;
   tempIncome: string;
   tempFamilyMember: {
     email: string;
@@ -89,6 +90,7 @@ const App: React.FC = () => {
   const [onboarding, setOnboarding] = useState<OnboardingState>({
     step: 'LOGIN',
     tempName: '',
+    tempEmail: '',
     tempIncome: '',
     tempFamilyMember: { email: '', name: '', income: '' }
   });
@@ -116,7 +118,7 @@ const App: React.FC = () => {
 
   const isSecondOfDay = useMemo(() => new Date().getDate() === 2, []);
 
-  useEffect(() => { if (settings.googleSheetsUrl && currentUser) handleSync(); }, [currentUser]);
+  useEffect(() => { if (settings.googleSheetsUrl && !currentUser) handleSync(); }, []);
   useEffect(() => { localStorage.setItem('finanflow_settings', JSON.stringify(settings)); }, [settings]);
   useEffect(() => { if (currentUser) { localStorage.setItem('finanflow_user', JSON.stringify(currentUser)); localStorage.setItem('finanflow_data', JSON.stringify(data)); } }, [currentUser, data]);
   useEffect(() => { const localData = localStorage.getItem('finanflow_data'); if (localData && currentUser) setData(JSON.parse(localData)); }, []);
@@ -148,13 +150,13 @@ const App: React.FC = () => {
     }
   };
 
-  const handleLogin = () => setOnboarding(prev => ({ ...prev, step: 'PERSONAL_INFO' }));
-  const handlePersonalInfoSubmit = () => { if (!onboarding.tempName || !onboarding.tempIncome) return alert("Por favor, preencha todos os campos."); setOnboarding(prev => ({ ...prev, step: 'FAMILY_CHECK' })); };
+  const handleLogin = () => setOnboarding(prev => ({ ...prev, step: 'EMAIL_LOGIN' }));
+  const handlePersonalInfoSubmit = () => { if (!onboarding.tempName || !onboarding.tempEmail || !onboarding.tempIncome) return alert("Por favor, preencha todos os campos."); setOnboarding(prev => ({ ...prev, step: 'FAMILY_CHECK' })); };
   const handleFamilyCheck = (addMember: boolean) => addMember ? setOnboarding(prev => ({ ...prev, step: 'FAMILY_FORM' })) : finishOnboarding();
   const handleFamilyFormSubmit = () => { if (!onboarding.tempFamilyMember.email || !onboarding.tempFamilyMember.name || !onboarding.tempFamilyMember.income) return alert("Preencha todos os dados."); finishOnboarding(true); };
 
   const finishOnboarding = (hasFamily = false) => {
-    const mainUser: UserProfile = { id: '1', name: onboarding.tempName, email: 'user@gmail.com', income: parseFloat(onboarding.tempIncome), role: 'ADMIN', avatar: 'https://ui-avatars.com/api/?name=' + onboarding.tempName };
+    const mainUser: UserProfile = { id: '1', name: onboarding.tempName, email: onboarding.tempEmail, income: parseFloat(onboarding.tempIncome), role: 'ADMIN', avatar: 'https://ui-avatars.com/api/?name=' + onboarding.tempName };
     const users = [mainUser];
     const incomes: Income[] = [{ id: 'inc_1', source: `Salário - ${mainUser.name}`, amount: mainUser.income }];
     if (hasFamily) {
@@ -224,9 +226,7 @@ const App: React.FC = () => {
           <div className="min-h-screen bg-[#f8f9fe] flex items-center justify-center p-6">
               <div className="w-full max-w-md bg-white rounded-[2.5rem] p-10 shadow-xl border border-gray-100">
                   <div className="flex justify-center mb-8">
-                      <div className="w-20 h-20 bg-gradient-primary rounded-3xl flex items-center justify-center text-white shadow-lg float-animation">
-                         <Zap size={40} fill="currentColor" />
-                      </div>
+                      <img src="/logo.png" alt="FinanFlow Logo" className="w-20 h-20 rounded-3xl shadow-lg" />
                   </div>
                   {onboarding.step === 'LOGIN' && (
                       <div className="text-center space-y-8">
@@ -237,10 +237,19 @@ const App: React.FC = () => {
                           </button>
                       </div>
                   )}
+                  {onboarding.step === 'EMAIL_LOGIN' && (
+                      <div className="text-center space-y-8">
+                          <h1 className="text-4xl font-black text-gray-800">FinanFlow</h1>
+                          <p className="text-gray-400 font-medium">Digite seu e-mail para acessar ou criar sua conta.</p>
+                          <input type="email" value={onboarding.tempEmail} onChange={e => setOnboarding({...onboarding, tempEmail: e.target.value})} className="w-full bg-gray-50 border-0 rounded-xl p-4 font-bold" placeholder="Seu e-mail" />
+                          <button onClick={() => { const user = data.users.find(u => u.email === onboarding.tempEmail); if (user) { setCurrentUser(user); } else { setOnboarding(prev => ({ ...prev, step: 'PERSONAL_INFO' })); } }} className="w-full bg-black text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-2">Continuar <ArrowRight size={18} /></button>
+                      </div>
+                  )}
                   {onboarding.step === 'PERSONAL_INFO' && (
                       <div className="space-y-6">
                           <h2 className="text-2xl font-black text-center">Boas-vindas!</h2>
                           <input type="text" value={onboarding.tempName} onChange={e => setOnboarding({...onboarding, tempName: e.target.value})} className="w-full bg-gray-50 border-0 rounded-xl p-4 font-bold" placeholder="Como quer ser chamado?" />
+                          <input type="email" value={onboarding.tempEmail} onChange={e => setOnboarding({...onboarding, tempEmail: e.target.value})} className="w-full bg-gray-50 border-0 rounded-xl p-4 font-bold" placeholder="Seu e-mail" />
                           <input type="number" value={onboarding.tempIncome} onChange={e => setOnboarding({...onboarding, tempIncome: e.target.value})} className="w-full bg-gray-50 border-0 rounded-xl p-4 font-bold" placeholder="Renda Média Mensal" />
                           <button onClick={handlePersonalInfoSubmit} className="w-full bg-black text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-2">Próximo <ArrowRight size={18} /></button>
                       </div>
