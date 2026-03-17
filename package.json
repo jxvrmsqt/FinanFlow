@@ -2,28 +2,20 @@
   "name": "finanflow",
   "private": true,
   "version": "1.0.0",
-  "main": "main.js",
-  "description": "FinanFlow - Gerenciamento Financeiro Inteligente",
-  "author": "FinanFlow Team",
+  "packageManager": "pnpm@9.0.0", 
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview"
   },
   "engines": {
-    "node": ">=20.0.0",
-    "npm": ">=9.0.0",
-    "pnpm": ">=8.0.0"
+    "node": "20.x",
+    "pnpm": "9.x"
   },
   "pnpm": {
     "onlyBuiltDependencies": ["esbuild", "protobufjs", "sharp"]
   },
   "dependencies": {
-    "@capacitor/android": "^8.2.0",
-    "@capacitor/assets": "^3.0.5",
-    "@capacitor/cli": "^8.2.0",
-    "@capacitor/core": "^8.2.0",
-    "@capacitor/ios": "^8.2.0",
     "@google/genai": "^1.41.0",
     "lucide-react": "^0.564.0",
     "react": "^19.2.4",
@@ -31,8 +23,6 @@
     "recharts": "^3.7.0"
   },
   "devDependencies": {
-    "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^4.3.0",
     "typescript": "^5.5.0",
     "vite": "^6.0.0"
