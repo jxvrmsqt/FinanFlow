@@ -4,3 +4,10 @@ allowBuilds:
   esbuild: true
   protobufjs: true
   sharp: true
+
+ignoredBuiltDependencies:
+  - electron
+  - electron-winstaller
+  - esbuild
+  - protobufjs
+  - sharp

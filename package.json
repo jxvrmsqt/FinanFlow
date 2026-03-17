@@ -19,6 +19,9 @@
     "npm": ">=9.0.0",
     "pnpm": ">=8.0.0"
   },
+  "pnpm": {
+    "onlyBuiltDependencies": ["electron", "electron-winstaller", "esbuild", "protobufjs", "sharp"]
+  },
   "dependencies": {
     "@capacitor/android": "^8.2.0",
     "@capacitor/assets": "^3.0.5",
