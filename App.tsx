@@ -76,7 +76,14 @@ const App: React.FC = () => {
 
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(() => {
     const savedUser = localStorage.getItem('finanflow_user');
-    return savedUser ? JSON.parse(savedUser) : null;
+    return savedUser ? JSON.parse(savedUser) : {
+      id: '1',
+      name: 'Usuário Teste',
+      email: 'teste@gmail.com',
+      income: 5000,
+      role: 'ADMIN',
+      avatar: 'https://ui-avatars.com/api/?name=Usuário Teste'
+    };
   });
   
   const [onboarding, setOnboarding] = useState<OnboardingState>({
@@ -351,6 +358,160 @@ const App: React.FC = () => {
                 </Card>
             </div>
         )}
+
+        {activeTab === 'debts' && (
+            <div className="space-y-12">
+                <div className="flex justify-between items-center">
+                    <h2 className="text-4xl font-black">Gerenciamento de Dívidas</h2>
+                    <button onClick={() => { setShowDebtModal(true); setIsEditingDebt(false); setDebtForm({ name: '', totalBalance: '', monthlyInstallment: '', type: 'Cartão', dueDate: '10', interestRate: '0', isAgreement: false, hasInstallments: true, installmentsCount: '', status: 'EM ANDAMENTO' }); }} className="bg-black text-white px-8 py-4 rounded-2xl font-bold flex items-center gap-3 hover:scale-105 transition-all shadow-lg"><Plus size={20} /> Adicionar Dívida</button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {data.debts.map(debt => (
+                        <div key={debt.id} className="bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100 hover:shadow-lg transition-all">
+                            <div className="flex justify-between items-start mb-4">
+                                <div><h3 className="font-bold text-xl">{debt.name}</h3><p className="text-gray-400 text-sm">{debt.type}</p></div>
+                                <div className={`px-3 py-1 rounded-full text-xs font-bold ${debt.status === 'QUITADA' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{debt.status}</div>
+                            </div>
+                            <div className="space-y-2 mb-6">
+                                <div className="flex justify-between"><span className="text-gray-500">Saldo Restante</span><span className="font-bold">R$ {debt.totalBalance.toLocaleString('pt-BR')}</span></div>
+                                <div className="flex justify-between"><span className="text-gray-500">Parcela Mensal</span><span className="font-bold">R$ {debt.monthlyInstallment.toLocaleString('pt-BR')}</span></div>
+                                <div className="flex justify-between"><span className="text-gray-500">Juros</span><span className="font-bold">{debt.interestRate}%</span></div>
+                            </div>
+                            <div className="flex gap-2">
+                                <button onClick={() => { setIsEditingDebt(true); setDebtForm({ id: debt.id, name: debt.name, totalBalance: debt.totalBalance.toString(), monthlyInstallment: debt.monthlyInstallment.toString(), type: debt.type, dueDate: debt.dueDate.toString(), interestRate: debt.interestRate.toString(), isAgreement: debt.isAgreement, hasInstallments: debt.remainingInstallments > 0, installmentsCount: debt.remainingInstallments.toString(), status: debt.status }); setShowDebtModal(true); }} className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-200 transition-all">Editar</button>
+                                <button onClick={() => setData({...data, debts: data.debts.filter(d => d.id !== debt.id)})} className="bg-red-100 text-red-700 py-3 px-4 rounded-xl font-bold hover:bg-red-200 transition-all"><Trash2 size={18} /></button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        )}
+
+        {activeTab === 'month' && (
+            <div className="space-y-12">
+                <div className="flex justify-between items-center">
+                    <h2 className="text-4xl font-black">Mês Atual</h2>
+                    <button onClick={handleCloseMonth} className="bg-black text-white px-8 py-4 rounded-2xl font-bold flex items-center gap-3 hover:scale-105 transition-all shadow-lg"><CheckCircle size={20} /> Fechar Mês</button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <Card title="Despesas Fixas" icon={<Home size={24}/>} className="bg-white">
+                        <div className="space-y-4">
+                            {data.fixedExpenses.map(expense => (
+                                <div key={expense.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                                    <div><p className="font-bold">{expense.description}</p><p className="text-sm text-gray-500">{expense.category}</p></div>
+                                    <div className="flex items-center gap-4">
+                                        <span className="font-bold">R$ {expense.amount.toLocaleString('pt-BR')}</span>
+                                        <input type="checkbox" checked={expense.paid} onChange={() => setData({...data, fixedExpenses: data.fixedExpenses.map(e => e.id === expense.id ? {...e, paid: !e.paid} : e)})} className="w-5 h-5" />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </Card>
+                    <Card title="Resumo do Mês" icon={<Calendar size={24}/>} className="bg-white">
+                        <div className="space-y-4">
+                            <div className="flex justify-between"><span>Receita Total</span><span className="font-bold">R$ {totals.totalIncome.toLocaleString('pt-BR')}</span></div>
+                            <div className="flex justify-between"><span>Despesas Pagas</span><span className="font-bold">R$ {totals.paidFixedExpenses.toLocaleString('pt-BR')}</span></div>
+                            <div className="flex justify-between"><span>Comprometimento Dívidas</span><span className="font-bold">R$ {totals.monthlyDebtCommitment.toLocaleString('pt-BR')}</span></div>
+                            <hr />
+                            <div className="flex justify-between text-lg"><span>Excedente</span><span className="font-bold text-emerald-500">R$ {totals.surplus.toLocaleString('pt-BR')}</span></div>
+                        </div>
+                    </Card>
+                </div>
+            </div>
+        )}
+
+        {activeTab === 'advisor' && (
+            <div className="space-y-12">
+                <h2 className="text-4xl font-black">Consultoria Financeira IA</h2>
+                <Card title="Análise Personalizada" icon={<BrainCircuit size={24}/>} className="bg-white">
+                    <p className="text-gray-500 mb-6">Receba conselhos estratégicos baseados em sua situação financeira atual.</p>
+                    <button onClick={handleGetAdvice} disabled={loadingAdvice} className="bg-black text-white px-8 py-4 rounded-2xl font-bold flex items-center gap-3 hover:scale-105 transition-all shadow-lg disabled:opacity-50">
+                        {loadingAdvice ? <RefreshCw size={20} className="animate-spin" /> : <Sparkles size={20} />} {loadingAdvice ? 'Analisando...' : 'Gerar Análise'}
+                    </button>
+                    {aiAdvice && <div className="mt-6 p-6 bg-gray-50 rounded-2xl"><p className="whitespace-pre-wrap">{aiAdvice}</p></div>}
+                </Card>
+            </div>
+        )}
+
+        {showDebtModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                <div className="bg-white rounded-[2rem] p-8 max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
+                    <div className="flex justify-between items-center mb-6">
+                        <h3 className="text-2xl font-black">{isEditingDebt ? 'Editar Dívida' : 'Nova Dívida'}</h3>
+                        <button onClick={() => setShowDebtModal(false)} className="text-gray-400 hover:text-gray-600"><X size={24} /></button>
+                    </div>
+                    <div className="space-y-4">
+                        <input type="text" value={debtForm.name} onChange={e => setDebtForm({...debtForm, name: e.target.value})} className="w-full bg-gray-50 rounded-xl p-4 font-bold" placeholder="Nome da Dívida" />
+                        <input type="number" value={debtForm.totalBalance} onChange={e => setDebtForm({...debtForm, totalBalance: e.target.value})} className="w-full bg-gray-50 rounded-xl p-4 font-bold" placeholder="Valor Total" />
+                        <input type="number" value={debtForm.monthlyInstallment} onChange={e => setDebtForm({...debtForm, monthlyInstallment: e.target.value})} className="w-full bg-gray-50 rounded-xl p-4 font-bold" placeholder="Parcela Mensal" />
+                        <select value={debtForm.type} onChange={e => setDebtForm({...debtForm, type: e.target.value})} className="w-full bg-gray-50 rounded-xl p-4 font-bold">
+                            <option>Cartão</option><option>Empréstimo</option><option>Financiamento</option><option>Outros</option>
+                        </select>
+                        <input type="number" value={debtForm.dueDate} onChange={e => setDebtForm({...debtForm, dueDate: e.target.value})} className="w-full bg-gray-50 rounded-xl p-4 font-bold" placeholder="Dia do Vencimento" />
+                        <input type="number" value={debtForm.interestRate} onChange={e => setDebtForm({...debtForm, interestRate: e.target.value})} className="w-full bg-gray-50 rounded-xl p-4 font-bold" placeholder="Taxa de Juros (%)" />
+                        <label className="flex items-center gap-2"><input type="checkbox" checked={debtForm.isAgreement} onChange={e => setDebtForm({...debtForm, isAgreement: e.target.checked})} /> Acordo/Negociação</label>
+                        <label className="flex items-center gap-2"><input type="checkbox" checked={debtForm.hasInstallments} onChange={e => setDebtForm({...debtForm, hasInstallments: e.target.checked})} /> Possui Parcelas</label>
+                        {debtForm.hasInstallments && <input type="number" value={debtForm.installmentsCount} onChange={e => setDebtForm({...debtForm, installmentsCount: e.target.value})} className="w-full bg-gray-50 rounded-xl p-4 font-bold" placeholder="Número de Parcelas Restantes" />}
+                        <select value={debtForm.status} onChange={e => setDebtForm({...debtForm, status: e.target.value})} className="w-full bg-gray-50 rounded-xl p-4 font-bold">
+                            <option value="EM ANDAMENTO">Em Andamento</option><option value="QUITADA">Quitada</option>
+                        </select>
+                        <button onClick={handleSaveDebt} className="w-full bg-black text-white py-4 rounded-2xl font-bold">Salvar</button>
+                    </div>
+                </div>
+            </div>
+        )}
+
+        {showExpenseModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                <div className="bg-white rounded-[2rem] p-8 max-w-lg w-full mx-4">
+                    <div className="flex justify-between items-center mb-6">
+                        <h3 className="text-2xl font-black">Nova Despesa Fixa</h3>
+                        <button onClick={() => setShowExpenseModal(false)} className="text-gray-400 hover:text-gray-600"><X size={24} /></button>
+                    </div>
+                    <div className="space-y-4">
+                        <input type="text" value={expenseForm.description} onChange={e => setExpenseForm({...expenseForm, description: e.target.value})} className="w-full bg-gray-50 rounded-xl p-4 font-bold" placeholder="Descrição" />
+                        <input type="number" value={expenseForm.amount} onChange={e => setExpenseForm({...expenseForm, amount: e.target.value})} className="w-full bg-gray-50 rounded-xl p-4 font-bold" placeholder="Valor" />
+                        <input type="number" value={expenseForm.dueDate} onChange={e => setExpenseForm({...expenseForm, dueDate: e.target.value})} className="w-full bg-gray-50 rounded-xl p-4 font-bold" placeholder="Dia do Vencimento" />
+                        <select value={expenseForm.category} onChange={e => setExpenseForm({...expenseForm, category: e.target.value})} className="w-full bg-gray-50 rounded-xl p-4 font-bold">
+                            <option>Moradia</option><option>Alimentação</option><option>Transporte</option><option>Saúde</option><option>Educação</option><option>Lazer</option><option>Outros</option>
+                        </select>
+                        <button onClick={() => { if (!expenseForm.description || !expenseForm.amount) return; const newExpense: FixedExpense = { id: Date.now().toString(), description: expenseForm.description, amount: parseFloat(expenseForm.amount), dueDate: parseInt(expenseForm.dueDate), category: expenseForm.category, paid: false }; setData({...data, fixedExpenses: [...data.fixedExpenses, newExpense]}); setShowExpenseModal(false); }} className="w-full bg-black text-white py-4 rounded-2xl font-bold">Adicionar</button>
+                    </div>
+                </div>
+            </div>
+        )}
+
+        {showExtraIncomeModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                <div className="bg-white rounded-[2rem] p-8 max-w-lg w-full mx-4">
+                    <div className="flex justify-between items-center mb-6">
+                        <h3 className="text-2xl font-black">Renda Extra</h3>
+                        <button onClick={() => setShowExtraIncomeModal(false)} className="text-gray-400 hover:text-gray-600"><X size={24} /></button>
+                    </div>
+                    <div className="space-y-4">
+                        <input type="number" value={extraIncomeAmount} onChange={e => setExtraIncomeAmount(e.target.value)} className="w-full bg-gray-50 rounded-xl p-4 font-bold" placeholder="Valor da Renda Extra" />
+                        <button onClick={() => { if (!extraIncomeAmount) return; setData({...data, incomes: [...data.incomes, { id: Date.now().toString(), source: 'Renda Extra', amount: parseFloat(extraIncomeAmount) }]}); setExtraIncomeAmount(''); setShowExtraIncomeModal(false); }} className="w-full bg-black text-white py-4 rounded-2xl font-bold">Adicionar</button>
+                    </div>
+                </div>
+            </div>
+        )}
+
+        {showCrisisModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                <div className="bg-white rounded-[2rem] p-8 max-w-lg w-full mx-4">
+                    <div className="flex justify-between items-center mb-6">
+                        <h3 className="text-2xl font-black">Simulação de Crise</h3>
+                        <button onClick={() => setShowCrisisModal(false)} className="text-gray-400 hover:text-gray-600"><X size={24} /></button>
+                    </div>
+                    <div className="space-y-4">
+                        <input type="number" value={simulationAmount} onChange={e => setSimulationAmount(e.target.value)} className="w-full bg-gray-50 rounded-xl p-4 font-bold" placeholder="Valor da Crise" />
+                        <button onClick={() => { if (!simulationAmount) return; const crisisAmount = parseFloat(simulationAmount); const sortedDebts = [...data.debts].filter(d => d.status === 'EM ANDAMENTO').sort((a, b) => b.priorityScore - a.priorityScore); let remainingCrisis = crisisAmount; const simulatedPayments = sortedDebts.map(debt => { if (remainingCrisis > 0) { const payAmount = Math.min(debt.totalBalance, remainingCrisis); remainingCrisis -= payAmount; return { ...debt, totalBalance: debt.totalBalance - payAmount, status: debt.totalBalance - payAmount <= 0 ? 'QUITADA' : 'EM ANDAMENTO' }; } return debt; }); setSimulationResult(simulatedPayments); }} className="w-full bg-black text-white py-4 rounded-2xl font-bold">Simular</button>
+                        {simulationResult && <div className="mt-6 p-6 bg-gray-50 rounded-2xl"><h4 className="font-bold mb-4">Resultado da Simulação</h4><div className="space-y-2">{simulationResult.map(debt => <div key={debt.id} className="flex justify-between"><span>{debt.name}</span><span>R$ {debt.totalBalance.toLocaleString('pt-BR')} ({debt.status})</span></div>)}</div></div>}
+                    </div>
+                </div>
+            </div>
+        )}
+
       </main>
     </div>
   );
