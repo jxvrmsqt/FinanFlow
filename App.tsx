@@ -14,7 +14,7 @@ import {
   CheckCircle, ChevronRight, AlertTriangle, Edit3, ArrowRight,
   Plus, Smile, ShoppingBag, Clock, Calculator, BrainCircuit, Layers, BarChart3,
   CreditCard, TrendingUp, Bell, Trash2, ShieldAlert, Award, Flame, AlertOctagon,
-  LifeBuoy, HeartHandshake, Sunrise, UserPlus, Users, Mail, LogOut, PartyPopper, Trophy, Cloud
+  LifeBuoy, HeartHandshake, Sunrise, UserPlus, Users, Mail, LogOut, PartyPopper, Trophy, Cloud, X
 } from 'lucide-react';
 import { getFinancialAdvice } from './geminiService';
 import { fetchSheetData, saveSheetData } from './sheetsService';
@@ -69,7 +69,7 @@ const MOTIVATIONAL_PHRASES = [
 
 const App: React.FC = () => {
   const [data, setData] = useState<FinancialState>(initialData);
-  const [activeTab, setActiveTab] = useState<'home' | 'debts' | 'month' | 'history' | 'settings' | 'advisor'>('home');
+  const [activeTab, setActiveTab] = useState<'home' | 'debts' | 'month' | 'income' | 'history' | 'settings' | 'advisor'>('home');
   const [settings, setSettings] = useState<AppSettings>(() => {
     const saved = localStorage.getItem('finanflow_settings');
     return saved ? JSON.parse(saved) : { googleSheetsUrl: '', lastSync: null };
@@ -77,14 +77,7 @@ const App: React.FC = () => {
 
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(() => {
     const savedUser = localStorage.getItem('finanflow_user');
-    return savedUser ? JSON.parse(savedUser) : {
-      id: '1',
-      name: 'Usuário Teste',
-      email: 'teste@gmail.com',
-      income: 5000,
-      role: 'ADMIN',
-      avatar: 'https://ui-avatars.com/api/?name=Usuário Teste'
-    };
+    return savedUser ? JSON.parse(savedUser) : null;
   });
   
   const [onboarding, setOnboarding] = useState<OnboardingState>({
@@ -116,9 +109,11 @@ const App: React.FC = () => {
   const [simulationAmount, setSimulationAmount] = useState<string>('');
   const [simulationResult, setSimulationResult] = useState<any[] | null>(null);
 
+  const appLogo = '/logo.png'; // use this logo image from public folder
+
   const isSecondOfDay = useMemo(() => new Date().getDate() === 2, []);
 
-  useEffect(() => { if (settings.googleSheetsUrl && !currentUser) handleSync(); }, []);
+  useEffect(() => { if (settings.googleSheetsUrl && currentUser) handleSync(); }, [settings.googleSheetsUrl, currentUser]);
   useEffect(() => { localStorage.setItem('finanflow_settings', JSON.stringify(settings)); }, [settings]);
   useEffect(() => { if (currentUser) { localStorage.setItem('finanflow_user', JSON.stringify(currentUser)); localStorage.setItem('finanflow_data', JSON.stringify(data)); } }, [currentUser, data]);
   useEffect(() => { const localData = localStorage.getItem('finanflow_data'); if (localData && currentUser) setData(JSON.parse(localData)); }, []);
@@ -267,7 +262,7 @@ const App: React.FC = () => {
           <div className="min-h-screen bg-[#f8f9fe] flex items-center justify-center p-6">
               <div className="w-full max-w-md bg-white rounded-[2.5rem] p-10 shadow-xl border border-gray-100">
                   <div className="flex justify-center mb-8">
-                      <img src="/logo.png" alt="FinanFlow Logo" className="w-20 h-20 rounded-3xl shadow-lg" />
+                      <img src={appLogo} alt="FinanFlow Logo" className="w-20 h-20 rounded-3xl shadow-lg" />
                   </div>
                   {onboarding.step === 'LOGIN' && (
                       <div className="text-center space-y-8">
@@ -324,7 +319,7 @@ const App: React.FC = () => {
     <div className="min-h-screen flex flex-col md:flex-row font-sans text-slate-800">
       <nav className="w-full md:w-[280px] bg-white flex flex-col md:fixed h-full z-20 border-r border-gray-100">
         <div className="p-10 flex items-center gap-3">
-          <img src="/logo.png" alt="FinanFlow Logo" className="w-10 h-10 rounded-xl shadow-lg" />
+          <img src={appLogo} alt="FinanFlow Logo" className="w-10 h-10 rounded-xl shadow-lg" />
           <h1 className="text-2xl font-black tracking-tight">FinanFlow</h1>
         </div>
         <div className="px-10 mb-8 flex items-center gap-3">
