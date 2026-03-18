@@ -221,6 +221,47 @@ const App: React.FC = () => {
       setTimeout(() => alert(`Mês encerrado! Excedente aplicado automaticamente.`), 500); setActiveTab('home');
   };
 
+  const resetDebtForm = () => {
+    setDebtForm({
+      name: '',
+      totalBalance: '',
+      monthlyInstallment: '',
+      type: 'Cartão',
+      dueDate: '10',
+      interestRate: '0',
+      isAgreement: false,
+      hasInstallments: true,
+      installmentsCount: '',
+      status: 'EM ANDAMENTO'
+    });
+    setIsEditingDebt(false);
+  };
+
+  const handleEditDebt = (debt: Debt) => {
+    setDebtForm({
+      id: debt.id,
+      name: debt.name,
+      totalBalance: debt.totalBalance.toString(),
+      monthlyInstallment: debt.monthlyInstallment.toString(),
+      type: debt.type,
+      dueDate: debt.dueDate.toString(),
+      interestRate: debt.interestRate.toString(),
+      isAgreement: debt.isAgreement,
+      hasInstallments: debt.remainingInstallments > 0,
+      installmentsCount: debt.remainingInstallments.toString(),
+      status: debt.status
+    });
+    setIsEditingDebt(true);
+    setShowDebtModal(true);
+  };
+
+  const handleDeleteDebt = (id: string) => {
+    const filtered = data.debts.filter(d => d.id !== id);
+    const newState = { ...data, debts: filtered };
+    setData(newState);
+    localStorage.setItem('finanflow_data', JSON.stringify(newState));
+  };
+
   if (!currentUser) {
       return (
           <div className="min-h-screen bg-[#f8f9fe] flex items-center justify-center p-6">
@@ -287,7 +328,7 @@ const App: React.FC = () => {
           <h1 className="text-2xl font-black tracking-tight">FinanFlow</h1>
         </div>
         <div className="px-10 mb-8 flex items-center gap-3">
-            <img src={currentUser.avatar} className="w-10 h-10 rounded-full border-2 border-pink-100" />
+            <img src={currentUser.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.name || 'Usuário')}` } className="w-10 h-10 rounded-full border-2 border-pink-100" />
             <div><p className="text-sm font-bold">{currentUser.name}</p><p className="text-[10px] text-gray-400 uppercase tracking-tighter">Foco na Liberdade</p></div>
         </div>
         <div className="flex-1 px-6 space-y-2">
@@ -297,6 +338,7 @@ const App: React.FC = () => {
             { id: 'month', label: 'Mês Atual', icon: <Calendar size={20} /> },
             { id: 'income', label: 'Ajuste de Renda', icon: <TrendingUp size={20} /> },
             { id: 'advisor', label: 'Consultoria', icon: <BrainCircuit size={20} /> },
+            { id: 'history', label: 'Histórico', icon: <History size={20} /> },
             { id: 'settings', label: 'Ajustes', icon: <Settings size={20} /> }
           ].map(tab => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id as any)} className={`w-full flex items-center gap-4 px-6 py-4 rounded-2xl transition-all font-bold text-sm ${activeTab === tab.id ? 'bg-gray-50 text-pink-600' : 'text-gray-400 hover:text-gray-600'}`}>
@@ -333,6 +375,46 @@ const App: React.FC = () => {
             </div>
         </div>
 
+        {showDebtModal && (
+          <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+            <div className="bg-white rounded-3xl p-8 w-full max-w-lg shadow-2xl">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-2xl font-black">{isEditingDebt ? 'Editar Dívida' : 'Adicionar Dívida'}</h3>
+                <button onClick={() => setShowDebtModal(false)} className="text-gray-500 hover:text-gray-800 font-bold">Fechar</button>
+              </div>
+              <div className="grid grid-cols-1 gap-4">
+                <input type="text" value={debtForm.name} onChange={e => setDebtForm({...debtForm, name: e.target.value})} className="border p-3 rounded-xl" placeholder="Nome da dívida" />
+                <input type="number" value={debtForm.totalBalance} onChange={e => setDebtForm({...debtForm, totalBalance: e.target.value})} className="border p-3 rounded-xl" placeholder="Valor total" />
+                <input type="number" value={debtForm.monthlyInstallment} onChange={e => setDebtForm({...debtForm, monthlyInstallment: e.target.value})} className="border p-3 rounded-xl" placeholder="Parcela mensal" />
+                <select value={debtForm.type} onChange={e => setDebtForm({...debtForm, type: e.target.value})} className="border p-3 rounded-xl">
+                  <option value="Cartão">Cartão</option>
+                  <option value="Empréstimo">Empréstimo</option>
+                  <option value="Financiamento">Financiamento</option>
+                  <option value="Acordo">Acordo</option>
+                  <option value="Outros">Outros</option>
+                </select>
+                <div className="grid grid-cols-2 gap-4">
+                  <input type="number" value={debtForm.dueDate} onChange={e => setDebtForm({...debtForm, dueDate: e.target.value})} className="border p-3 rounded-xl" placeholder="Dia do vencimento" />
+                  <input type="number" value={debtForm.interestRate} onChange={e => setDebtForm({...debtForm, interestRate: e.target.value})} className="border p-3 rounded-xl" placeholder="Juros (%)" />
+                </div>
+                <div className="flex items-center gap-3">
+                  <label className="inline-flex items-center gap-2"><input type="checkbox" checked={debtForm.isAgreement} onChange={e => setDebtForm({...debtForm, isAgreement: e.target.checked})} />Acordo</label>
+                  <label className="inline-flex items-center gap-2"><input type="checkbox" checked={debtForm.hasInstallments} onChange={e => setDebtForm({...debtForm, hasInstallments: e.target.checked})} />Possui parcelas</label>
+                </div>
+                {debtForm.hasInstallments && <input type="number" value={debtForm.installmentsCount} onChange={e => setDebtForm({...debtForm, installmentsCount: e.target.value})} className="border p-3 rounded-xl" placeholder="Número de parcelas" />}
+                <select value={debtForm.status} onChange={e => setDebtForm({...debtForm, status: e.target.value as Debt['status']})} className="border p-3 rounded-xl">
+                  <option value="EM ANDAMENTO">EM ANDAMENTO</option>
+                  <option value="QUITADA">QUITADA</option>
+                </select>
+              </div>
+              <div className="flex justify-end gap-3 mt-6">
+                <button onClick={() => setShowDebtModal(false)} className="px-5 py-3 border rounded-xl">Cancelar</button>
+                <button onClick={handleSaveDebt} className="px-5 py-3 bg-blue-600 text-white rounded-xl">Salvar</button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {activeTab === 'home' && (
           <div className="space-y-12">
             <section className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -354,6 +436,61 @@ const App: React.FC = () => {
               <div className="flex gap-6"><Sparkles size={32} className="text-indigo-200" /><div><h3 className="font-bold text-xl mb-4">Análise Estratégica da IA</h3><p className="text-indigo-100 leading-relaxed whitespace-pre-wrap">{aiAdvice}</p></div></div>
             </div>}
           </div>
+        )}
+
+        {activeTab === 'debts' && (
+          <div className="space-y-8">
+            <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+              <h2 className="text-4xl font-black">Dívidas</h2>
+              <button onClick={() => { resetDebtForm(); setShowDebtModal(true); }} className="px-6 py-3 bg-blue-600 text-white rounded-2xl font-bold">Adicionar Dívida</button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {data.debts.length === 0 && <p className="text-gray-500">Nenhuma dívida cadastrada.</p>}
+              {data.debts.map(debt => (
+                <Card key={debt.id} title={debt.name} icon={<CreditCard size={20} />} className="border p-4">
+                  <p className="text-sm">Saldo: R$ {debt.totalBalance.toLocaleString('pt-BR')}</p>
+                  <p className="text-sm">Parcela: R$ {debt.monthlyInstallment.toLocaleString('pt-BR')}</p>
+                  <p className="text-sm">Situação: {debt.status}</p>
+                  <p className="text-sm">Vencimento: {debt.dueDate}º dia</p>
+                  <div className="mt-3 flex gap-2">
+                    <button onClick={() => handleEditDebt(debt)} className="px-3 py-2 bg-yellow-500 text-white rounded-xl">Editar</button>
+                    <button onClick={() => handleDeleteDebt(debt.id)} className="px-3 py-2 bg-red-500 text-white rounded-xl">Excluir</button>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'month' && (
+          <Card title="Fechamento de Mês" icon={<Calendar size={24} />} className="bg-white">
+            <p className="text-gray-600 mb-4">Saldo atual: R$ {totals.surplus.toLocaleString('pt-BR')}</p>
+            <p className="text-gray-600 mb-4">Despesa fixa paga: R$ {totals.paidFixedExpenses.toLocaleString('pt-BR')}</p>
+            <p className="text-gray-600 mb-4">Despesas fixas pendentes: R$ {totals.unpaidFixedExpenses.toLocaleString('pt-BR')}</p>
+            <button onClick={handleCloseMonth} className="px-6 py-3 bg-green-600 text-white rounded-2xl font-bold">Encerrar Mês</button>
+          </Card>
+        )}
+
+        {activeTab === 'advisor' && (
+          <Card title="Consultoria" icon={<BrainCircuit size={24} />} className="bg-white">
+            <p className="text-gray-600 mb-4">Peça uma análise de inteligência financeira baseada na sua situação atual.</p>
+            <button onClick={handleGetAdvice} className="px-6 py-3 bg-purple-600 text-white rounded-2xl font-bold">Obter aconselhamento</button>
+            {loadingAdvice && <p className="text-gray-500 mt-3">Buscando...</p>}
+            {aiAdvice && <p className="text-gray-800 mt-3 whitespace-pre-wrap">{aiAdvice}</p>}
+          </Card>
+        )}
+
+        {activeTab === 'history' && (
+          <Card title="Histórico" icon={<History size={24} />} className="bg-white">
+            <div className="space-y-2">
+              {data.history.length === 0 ? <p className="text-gray-500">Sem histórico ainda.</p> : data.history.map((item, idx) => (
+                <div key={idx} className="border-b pb-2">
+                  <p className="text-sm font-bold">{item.date}</p>
+                  <p className="text-sm">Saldo: R$ {item.balance.toLocaleString('pt-BR')}</p>
+                </div>
+              ))}
+            </div>
+          </Card>
         )}
 
         {activeTab === 'settings' && (
