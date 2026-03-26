@@ -317,10 +317,13 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row font-sans text-slate-800">
-      <nav className="w-full md:w-[280px] bg-white flex flex-col md:fixed h-full z-20 border-r border-gray-100">
-        <div className="p-10 flex items-center gap-3">
-          <img src={appLogo} alt="FinanFlow Logo" className="w-10 h-10 rounded-xl shadow-lg" />
-          <h1 className="text-2xl font-black tracking-tight">FinanFlow</h1>
+      <nav className="w-full md:w-[280px] bg-white flex flex-col md:fixed h-screen z-20 border-r border-gray-100">
+        <div className="w-full bg-white border-b border-gray-200 p-4 md:p-8">
+          <div className="flex items-center gap-3">
+            <img src={appLogo} alt="FinanFlow Logo" className="w-10 h-10 rounded-xl shadow-md" />
+            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight leading-none" style={{ fontFamily: 'Poppins, "Segoe UI", sans-serif' }}>FinanFlow</h1>
+          </div>
+          <div className="h-1 mt-2 w-full bg-pink-500 rounded-full" />
         </div>
         <div className="px-10 mb-8 flex items-center gap-3">
             <img src={currentUser.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.name || 'Usuário')}` } className="w-10 h-10 rounded-full border-2 border-pink-100" />
@@ -350,7 +353,7 @@ const App: React.FC = () => {
         </div>
       </nav>
 
-      <main className="flex-1 md:ml-[280px] p-6 md:p-12 overflow-x-hidden">
+      <main className="flex-1 md:ml-[280px] p-6 md:p-12 min-h-screen overflow-y-auto overflow-x-hidden">
         {showCelebration.visible && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md animate-in fade-in duration-500">
                 <div className="bg-white rounded-[3rem] p-12 text-center shadow-2xl animate-in zoom-in-50 duration-500 max-w-lg mx-4">
