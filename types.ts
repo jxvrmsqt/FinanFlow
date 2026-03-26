@@ -15,7 +15,7 @@ export interface Debt {
   totalBalance: number;
   monthlyInstallment: number;
   remainingInstallments: number;
-  type: 'Cartão' | 'Empréstimo' | 'Financiamento' | 'Acordo' | 'Outros';
+  type: 'Cartão' | 'Empréstimo' | 'Financiamento' | 'Acordo' | 'Despesa Fixa' | 'Outros';
   status: 'EM ANDAMENTO' | 'QUITADA';
   priorityScore: number;
   dueDate: number; // Dia do vencimento

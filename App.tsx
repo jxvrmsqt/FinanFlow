@@ -165,8 +165,13 @@ const App: React.FC = () => {
 
   const handleLogout = () => { localStorage.removeItem('finanflow_user'); setCurrentUser(null); setOnboarding({ step: 'LOGIN', tempName: '', tempIncome: '', tempFamilyMember: { email: '', name: '', income: '' } }); };
 
-  const calculateSmartPriorityScore = (isAgreement: boolean, interestRate: number, monthlyInstallment: number) => {
-    let score = 0; if (isAgreement) score += 1000; score += interestRate * 20; score += monthlyInstallment * 0.05; return Math.round(score);
+  const calculateSmartPriorityScore = (type: string, isAgreement: boolean, interestRate: number, monthlyInstallment: number) => {
+    let score = 0;
+    if (type === 'Despesa Fixa') score += 2000; // Prioridade máxima para despesas fixas
+    if (isAgreement) score += 1000;
+    score += interestRate * 20;
+    score += monthlyInstallment * 0.05;
+    return Math.round(score);
   };
 
   const totals = useMemo(() => {
@@ -188,7 +193,7 @@ const App: React.FC = () => {
     if (!debtForm.name || !debtForm.totalBalance) return;
     const rate = parseFloat(debtForm.interestRate) || 0;
     const installment = parseFloat(debtForm.monthlyInstallment) || 0;
-    const newDebt: Debt = { id: isEditingDebt && debtForm.id ? debtForm.id : Date.now().toString(), name: debtForm.name, originalValue: parseFloat(debtForm.totalBalance), totalBalance: parseFloat(debtForm.totalBalance), monthlyInstallment: installment, remainingInstallments: debtForm.hasInstallments ? parseInt(debtForm.installmentsCount) || 0 : 0, type: debtForm.type as any, status: debtForm.status || 'EM ANDAMENTO', priorityScore: calculateSmartPriorityScore(debtForm.isAgreement, rate, installment), dueDate: parseInt(debtForm.dueDate) || 10, interestRate: rate, isAgreement: debtForm.isAgreement };
+    const newDebt: Debt = { id: isEditingDebt && debtForm.id ? debtForm.id : Date.now().toString(), name: debtForm.name, originalValue: parseFloat(debtForm.totalBalance), totalBalance: parseFloat(debtForm.totalBalance), monthlyInstallment: installment, remainingInstallments: debtForm.hasInstallments ? parseInt(debtForm.installmentsCount) || 0 : 0, type: debtForm.type as any, status: debtForm.status || 'EM ANDAMENTO', priorityScore: calculateSmartPriorityScore(debtForm.type, debtForm.isAgreement, rate, installment), dueDate: parseInt(debtForm.dueDate) || 10, interestRate: rate, isAgreement: debtForm.isAgreement };
     if (newDebt.status === 'QUITADA' && (!isEditingDebt || data.debts.find(d => d.id === newDebt.id)?.status !== 'QUITADA')) {
         setShowCelebration({ visible: true, message: "Fantástico! Você acabou de eliminar uma pendência do seu futuro. Sua liberdade financeira acaba de ganhar um novo fôlego!" });
     }
@@ -199,7 +204,7 @@ const App: React.FC = () => {
 
   const handleCloseMonth = async () => {
       const surplus = totals.surplus; let remainingSurplus = surplus > 0 ? surplus : 0;
-      const sortedDebtsForPayment = [...data.debts].filter(d => d.status === 'EM ANDAMENTO').sort((a, b) => calculateSmartPriorityScore(b.isAgreement, b.interestRate, b.monthlyInstallment) - calculateSmartPriorityScore(a.isAgreement, a.interestRate, a.monthlyInstallment));
+      const sortedDebtsForPayment = [...data.debts].filter(d => d.status === 'EM ANDAMENTO').sort((a, b) => calculateSmartPriorityScore(b.type, b.isAgreement, b.interestRate, b.monthlyInstallment) - calculateSmartPriorityScore(a.type, a.isAgreement, a.interestRate, a.monthlyInstallment));
       const updatedDebts = sortedDebtsForPayment.map(debt => {
         if (remainingSurplus > 0) {
           const amountToDeduct = Math.min(debt.totalBalance, remainingSurplus); remainingSurplus -= amountToDeduct; const newBalance = debt.totalBalance - amountToDeduct;
@@ -389,6 +394,7 @@ const App: React.FC = () => {
                   <option value="Empréstimo">Empréstimo</option>
                   <option value="Financiamento">Financiamento</option>
                   <option value="Acordo">Acordo</option>
+                  <option value="Despesa Fixa">Despesa Fixa</option>
                   <option value="Outros">Outros</option>
                 </select>
                 <div className="grid grid-cols-2 gap-4">
@@ -553,13 +559,13 @@ const App: React.FC = () => {
                         </div>
                     </Card>
                     <Card title="Resumo do Mês" icon={<Calendar size={24}/>} className="bg-white">
-                        <div className="space-y-4">
-                            <div className="flex justify-between"><span>Receita Total</span><span className="font-bold">R$ {totals.totalIncome.toLocaleString('pt-BR')}</span></div>
-                            <div className="flex justify-between"><span>Despesas Pagas</span><span className="font-bold">R$ {totals.paidFixedExpenses.toLocaleString('pt-BR')}</span></div>
-                            <div className="flex justify-between"><span>Comprometimento Dívidas</span><span className="font-bold">R$ {totals.monthlyDebtCommitment.toLocaleString('pt-BR')}</span></div>
-                            <hr />
-                            <div className="flex justify-between text-lg"><span>Excedente</span><span className="font-bold text-emerald-500">R$ {totals.surplus.toLocaleString('pt-BR')}</span></div>
-                        </div>
+                        <ul className="space-y-2">
+                            <li className="flex justify-between"><span>Receita Total</span><span className="font-bold">R$ {totals.totalIncome.toLocaleString('pt-BR')}</span></li>
+                            <li className="flex justify-between"><span>Despesas Fixas Pagas</span><span className="font-bold">R$ {totals.paidFixedExpenses.toLocaleString('pt-BR')}</span></li>
+                            <li className="flex justify-between"><span>Despesas Fixas Pendentes</span><span className="font-bold">R$ {totals.unpaidFixedExpenses.toLocaleString('pt-BR')}</span></li>
+                            <li className="flex justify-between"><span>Comprometimento Mensal com Dívidas</span><span className="font-bold">R$ {totals.monthlyDebtCommitment.toLocaleString('pt-BR')}</span></li>
+                            <li className="border-t pt-2 flex justify-between text-lg"><span>Saldo/Excedente</span><span className="font-bold text-emerald-500">R$ {totals.surplus.toLocaleString('pt-BR')}</span></li>
+                        </ul>
                     </Card>
                 </div>
             </div>
@@ -588,7 +594,13 @@ const App: React.FC = () => {
                     <div className="space-y-4">
                         {[...data.debts].filter(d => d.status === 'EM ANDAMENTO').sort((a, b) => b.priorityScore - a.priorityScore).map(debt => (
                             <div key={debt.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
-                                <div><p className="font-bold">{debt.name}</p><p className="text-sm text-gray-500">Prioridade: {debt.isAgreement ? 'Acordo/Negociação' : 'Padrão'}</p></div>
+                                <div className="flex items-center gap-2">
+                                    {!debt.isAgreement && <AlertTriangle size={16} className="text-orange-500" />}
+                                    <div>
+                                        <p className="font-bold">{debt.name}</p>
+                                        <p className="text-sm text-gray-500">{debt.isAgreement ? 'Em Negociação/Acordo' : 'Parada - Não Negociada'}</p>
+                                    </div>
+                                </div>
                                 <div className="text-right"><p className="font-bold">R$ {debt.monthlyInstallment.toLocaleString('pt-BR')}</p><p className="text-sm text-gray-500">Score: {debt.priorityScore}</p></div>
                             </div>
                         ))}
@@ -622,7 +634,7 @@ const App: React.FC = () => {
                         <input type="number" value={debtForm.totalBalance} onChange={e => setDebtForm({...debtForm, totalBalance: e.target.value})} className="w-full bg-gray-50 rounded-xl p-4 font-bold" placeholder="Valor Total" />
                         <input type="number" value={debtForm.monthlyInstallment} onChange={e => setDebtForm({...debtForm, monthlyInstallment: e.target.value})} className="w-full bg-gray-50 rounded-xl p-4 font-bold" placeholder="Parcela Mensal" />
                         <select value={debtForm.type} onChange={e => setDebtForm({...debtForm, type: e.target.value})} className="w-full bg-gray-50 rounded-xl p-4 font-bold">
-                            <option>Cartão</option><option>Empréstimo</option><option>Financiamento</option><option>Outros</option>
+                            <option>Cartão</option><option>Empréstimo</option><option>Financiamento</option><option>Acordo</option><option>Despesa Fixa</option><option>Outros</option>
                         </select>
                         <input type="number" value={debtForm.dueDate} onChange={e => setDebtForm({...debtForm, dueDate: e.target.value})} className="w-full bg-gray-50 rounded-xl p-4 font-bold" placeholder="Dia do Vencimento" />
                         <input type="number" value={debtForm.interestRate} onChange={e => setDebtForm({...debtForm, interestRate: e.target.value})} className="w-full bg-gray-50 rounded-xl p-4 font-bold" placeholder="Taxa de Juros (%)" />
