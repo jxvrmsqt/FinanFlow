@@ -1,4 +1,6 @@
-/* Arquivo de estilo global para FinanFlow */
+/* Global styles for FinanFlow (created to satisfy Vite build expectations).
+   Add any global CSS overrides here. */
+
 body {
   margin: 0;
   font-family: 'Plus Jakarta Sans', sans-serif;

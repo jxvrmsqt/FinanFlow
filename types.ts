@@ -8,19 +8,33 @@ export interface UserProfile {
   role: 'ADMIN' | 'MEMBER';
 }
 
+export type DebtType = 'Cartão' | 'Empréstimo' | 'Financiamento' | 'Acordo' | 'Outros';
+export type DebtStatus = 'EM ANDAMENTO' | 'QUITADA' | 'CORRENTE' | 'ACORDO';
+
+export interface DebtPayment {
+  id: string;
+  date: string;
+  amount: number;
+  discount?: number; // Valor economizado (ex: desconto por antecipação)
+  type: 'TOTAL' | 'PARCIAL' | 'ANTECIPACAO';
+}
+
 export interface Debt {
   id: string;
   name: string;
-  originalValue: number;
-  totalBalance: number;
-  monthlyInstallment: number;
+  originalValue: number; // Valor da dívida inicial (antes de qualquer negociação)
+  totalBalance: number; // Saldo devedor atual
+  monthlyInstallment: number; // Valor da parcela mensal (0 se for CORRENTE)
   remainingInstallments: number;
-  type: 'Cartão' | 'Empréstimo' | 'Financiamento' | 'Acordo' | 'Despesa Fixa' | 'Outros';
-  status: 'EM ANDAMENTO' | 'QUITADA';
+  type: DebtType;
+  status: DebtStatus;
   priorityScore: number;
   dueDate: number; // Dia do vencimento
   interestRate: number; // Taxa mensal em %
   isAgreement: boolean; // Se for acordo, quebra gera cancelamento
+  agreementValue?: number; // Valor total do acordo fechado
+  payments?: DebtPayment[];
+  createdAt?: string;
 }
 
 export interface Income {
@@ -43,6 +57,7 @@ export interface FixedExpense {
 export interface HistoryPoint {
   date: string;
   balance: number;
+  savingsFromNegotiation?: number; // Economia acumulada por descontos/antecipações
 }
 
 export interface FinancialState {
