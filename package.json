@@ -14,9 +14,15 @@
     "build": "vite build",
     "preview": "vite preview",
     "electron:dev": "electron .",
+<<<<<<< HEAD
     "electron:build:win": "npm run build && electron-builder --win",
     "electron:build:linux": "npm run build && electron-builder --linux",
     "electron:build:mac": "npm run build && electron-builder --mac"
+=======
+    "electron:build:win": "pnpm run build && electron-builder --win",
+    "electron:build:linux": "pnpm run build && electron-builder --linux",
+    "electron:build:mac": "pnpm run build && electron-builder --mac"
+>>>>>>> 9e2c332e7a2dc2ec635c22774c00a246cc32d772
   },
   "dependencies": {
     "@capacitor/android": "^8.2.0",
