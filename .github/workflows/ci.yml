@@ -1,0 +1,62 @@
+name: CI / Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  release:
+    types: [published]
+
+jobs:
+  build-web:
+    name: Build Web App
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: web-dist
+          path: dist
+
+  release:
+    name: Build Electron Releases
+    needs: build-web
+    if: github.event_name == 'release'
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Build Electron installer
+        run: |
+          if [ "${{ runner.os }}" = "Windows" ]; then npm run electron:build:win; fi
+          if [ "${{ runner.os }}" = "Linux" ]; then npm run electron:build:linux; fi
+          if [ "${{ runner.os }}" = "macOS" ]; then npm run electron:build:mac; fi
+      - name: Upload built artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: electron-${{ matrix.os }}
+          path: |
+            dist_electron/**/*.exe
+            dist_electron/**/*.dmg
+            dist_electron/**/*.AppImage
+            dist_electron/**/*.zip
+            dist_electron/**/*.deb
+            dist_electron/**/*.rpm

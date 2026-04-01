@@ -1,22 +1,24 @@
+
 import React from 'react';
 
 interface CardProps {
-  title: string;
-  icon?: React.ReactNode;
+  title?: string;
+  children: React.ReactNode;
   className?: string;
-  children?: React.ReactNode;
+  icon?: React.ReactNode;
+  variant?: 'default' | 'gradient';
 }
 
-const Card: React.FC<CardProps> = ({ title, icon, className = '', children }) => {
+const Card: React.FC<CardProps> = ({ title, children, className = "", icon, variant = 'default' }) => {
   return (
-    <div className={`rounded-[2rem] p-8 shadow-sm border border-gray-100 ${className}`}>
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h3 className="text-2xl font-black">{title}</h3>
+    <div className={`rounded-[1.5rem] p-6 transition-all duration-300 hover:shadow-lg ${variant === 'default' ? 'glass-card' : ''} ${className}`}>
+      {(title || icon) && (
+        <div className="flex items-center gap-3 mb-6">
+          {icon && <span className={`${variant === 'gradient' ? 'text-white/80' : 'text-rose-500'}`}>{icon}</span>}
+          {title && <h3 className={`text-xs font-bold uppercase tracking-wider ${variant === 'gradient' ? 'text-white/90' : 'text-gray-400'}`}>{title}</h3>}
         </div>
-        {icon && <div className="text-gray-500">{icon}</div>}
-      </div>
-      <div>{children}</div>
+      )}
+      <div className={variant === 'gradient' ? 'text-white' : ''}>{children}</div>
     </div>
   );
 };
